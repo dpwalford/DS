@@ -1,0 +1,127 @@
+---
+title: "March Madness Data"
+author: "Daniel, Peter, Kayla"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(dplyr)
+library(tidyverse)
+library(caret)
+library(GGally)
+library(ggplot2)
+```
+
+```{r}
+mmdata1 <- read.csv('/Users/dpwal/downloads/mmdata1.csv') 
+#change this to your file location
+```
+
+## Splitting the Data
+```{r}
+set.seed(123) # For reproducibility
+trainingIndex <- createDataPartition(mmdata1$Net.Rating, p = .8, 
+                                      list = FALSE, 
+                                      times = 1)
+trainingData <- mmdata1[trainingIndex, ]
+testingData <- mmdata1[-trainingIndex, ]
+
+model <- lm(Net.Rating ~ Off.2PT.FG.Rank + Off.3PT.FG.Rank + Off.FT.Rank + Def.2PT.FG.Rank + Def.3PT.FG.Rank + Def.FT.Rank + Off.TO...Rank + Def.TO...Rank + RankTempo + Active.Coaching.Length.Index + RankOppBlockPct + RankBlockPct, 
+            data = trainingData)
+
+summary(model)
+```
+
+
+## Model Evaluation
+```{r}
+
+# Stepwise regression to optimize the model
+model_stepwise <- step(model, direction="both")
+summary(model_stepwise)
+
+# Predict on testing data
+predictions <- predict(model_stepwise, newdata = testingData)
+
+# Calculate and print RMSE
+rmse <- sqrt(mean((predictions - testingData$Net.Rating)^2))
+print(paste("RMSE:", rmse))
+
+# Calculate and print R^2
+r_squared <- summary(model_stepwise)$r.squared
+print(paste("R-squared:", r_squared))
+```
+
+The stepwise selection process refined the model to focus on the variables most predictive of Net.Rating, yielding a model with Off.2PT.FG.Rank, Off.3PT.FG.Rank, Def.2PT.FG.Rank, Off.TO.Rank, Def.TO.Rank, Active.Coaching.Length.Index, RankOppBlockPct, and RankBlockPct. This refined model emphasizes the significance of both offensive and defensive metrics in determining a team's net rating, highlighting the balance between scoring efficiency, turnover management, and blocking.
+
+
+## Visualize Results
+### Actual v. Predicted
+```{r}
+ggplot() +
+  geom_point(aes(x = testingData$Net.Rating, y = predictions), colour = "blue") +
+  geom_line(aes(x = testingData$Net.Rating, y = testingData$Net.Rating), colour = "red") +
+  labs(title = "Actual vs. Predicted Net.Rating", x = "Actual Net.Rating", y = "Predicted Net.Rating") +
+  theme_minimal()
+```
+
+### Coefficients Interpretation:
+
+**Offensive Metrics:** Both Off.2PT.FG.Rank and Off.3PT.FG.Rank are significant, with positive coefficients indicating that teams better at shooting to have higher net ratings. The significant negative coefficient for Off.TO.Rank underscores the negative impact of turnovers on team performance.
+
+**Defensive Metrics:** Def.TO.Rank has a significant negative relationship with Net.Rating, similar to offensive turnovers, indicating that forcing turnovers is beneficial. However, Def.2PT.FG.Rank, though included in the final model, shows a less significant negative impact, suggesting a nuanced role in performance.
+
+**RMSE & R-squared:** Our model, optimized through stepwise regression, yields an RMSE of 9.62 and an R² of 0.407. The RMSE indicates our predictions typically vary from the actual net ratings by about 9.62 points, a measure of precision, whereas the R² value suggests that 40.7% of the variability in net ratings is explained by our selected variables. This reflects a moderate predictive ability, highlighting both the model's strengths in capturing key factors affecting team performance. Essentially, our findings underscore the impact of specific offensive and defensive metrics on team net ratings.
+
+
+### Graphs of Our Most Significant Variables
+```{r}
+# Off.2PT.FG.Rank vs. Net.Rating
+ggplot(trainingData, aes(x = Off.2PT.FG.Rank, y = Net.Rating)) +
+  geom_point() +
+  geom_smooth(method = "lm", col = "blue") +
+  labs(title = "Off.2PT.FG.Rank vs. Net.Rating", x = "Off.2PT.FG.Rank", y = "Net.Rating")
+
+# Off.TO.Rank vs. Net.Rating
+ggplot(trainingData, aes(x = Off.TO...Rank, y = Net.Rating)) +
+  geom_point() +
+  geom_smooth(method = "lm", col = "red") +
+  labs(title = "Off.TO.Rank vs. Net.Rating", x = "Off.TO.Rank", y = "Net.Rating")
+
+# RankBlockPct vs. Net.Rating
+ggplot(trainingData, aes(x = RankBlockPct, y = Net.Rating)) +
+  geom_point() +
+  geom_smooth(method = "lm", col = "green") +
+  labs(title = "RankBlockPct vs. Net.Rating", x = "RankBlockPct", y = "Net.Rating")
+
+# Active.Coaching.Length.Index vs. Net.Rating
+ggplot(trainingData, aes(x = Active.Coaching.Length.Index, y = Net.Rating)) +
+  geom_point() +
+  geom_smooth(method = "lm", color = "purple") +
+  labs(title = "Active.Coaching.Length.Index vs. Net.Rating", x = "Active Coaching Length Index", y = "Net.Rating") +
+  theme_minimal()
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

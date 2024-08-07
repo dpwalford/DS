@@ -3950,3 +3950,15 @@ input, select, textarea {
 			opacity: 1;
 			visibility: visible;
 		}
+
+.side-by-side {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.side-by-side img {
+    width: 200px; /* Set a specific width */
+    height: auto; /* Maintain aspect ratio */
+    margin-left: 20px; /* Add some spacing */
+}

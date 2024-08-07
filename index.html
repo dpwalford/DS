@@ -16,14 +16,25 @@
                 display: flex;
                 align-items: flex-start;
                 justify-content: space-between;
+                flex-wrap: wrap;
             }
             .side-by-side img {
-                width: 42%; /* Adjust to desired larger size */
-                height: auto; /* Maintain aspect ratio */
+                width: 42%;
+                height: auto;
                 margin-left: 20px;
             }
             .side-by-side div {
                 width: 45%;
+            }
+            @media (max-width: 768px) {
+                .side-by-side {
+                    flex-direction: column;
+                    align-items: center;
+                }
+                .side-by-side img, .side-by-side div {
+                    width: 100%;
+                    margin: 0;
+                }
             }
         </style>
     </head>
@@ -60,7 +71,6 @@
                         </div>
                     </div>
                 </section>
-
 
                 <!-- Education Section -->
                 <section id="one">
